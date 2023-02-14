@@ -1,4 +1,5 @@
 import { Configuration, OpenAIApi } from "openai";
+import NextCors from 'nextjs-cors';
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,6 +16,15 @@ export default async function (req, res) {
     return;
   }
 
+  // Run the cors middleware
+  // nextjs-cors uses the cors package, so we invite you to check the documentation https://github.com/expressjs/cors
+  await NextCors(req, res, {
+    // Options
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    origin: '*',
+    optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  });
+
   const question = req.body.question || '';
   const historyQuestions = req.body.historyQuestions || '';
   if (question.trim().length === 0) {
@@ -25,6 +35,9 @@ export default async function (req, res) {
     });
     return;
   }
+
+  console.log("received question: ", question);
+  console.log("received history questions: ", historyQuestions);
 
   try {
     const completion = await openai.createCompletion({
