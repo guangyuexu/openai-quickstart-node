@@ -3,18 +3,20 @@ import { useState } from "react";
 import styles from "./index.module.css";
 
 export default function Home() {
-  const [animalInput, setAnimalInput] = useState("");
+  const [historyQuestions, setHistoryQuestions] = useState("");
+  const [questionInput, setQuestionInput] = useState("");
   const [result, setResult] = useState();
 
   async function onSubmit(event) {
     event.preventDefault();
     try {
+      setHistoryQuestions(historyQuestions + `Q: ${questionInput}\n`);
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ animal: animalInput }),
+        body: JSON.stringify({ question: questionInput, historyQuestions: historyQuestions}),
       });
 
       const data = await response.json();
@@ -22,8 +24,10 @@ export default function Home() {
         throw data.error || new Error(`Request failed with status ${response.status}`);
       }
 
+      console.log(data);
       setResult(data.result);
-      setAnimalInput("");
+      setHistoryQuestions(historyQuestions + `Q: ${questionInput}\nA: ${data.result.trim()}\n\n`);
+      setQuestionInput("");
     } catch(error) {
       // Consider implementing your own error handling logic here
       console.error(error);
@@ -40,18 +44,18 @@ export default function Home() {
 
       <main className={styles.main}>
         <img src="/dog.png" className={styles.icon} />
-        <h3>Name my pet</h3>
+        <h3>Current conversation:</h3>
+        <textarea className={styles.result} value={historyQuestions} readOnly></textarea>
         <form onSubmit={onSubmit}>
           <input
             type="text"
-            name="animal"
-            placeholder="Enter an animal"
-            value={animalInput}
-            onChange={(e) => setAnimalInput(e.target.value)}
+            name="question"
+            placeholder="Ask a question"
+            value={questionInput}
+            onChange={(e) => setQuestionInput(e.target.value)}
           />
-          <input type="submit" value="Generate names" />
+          <input type="submit" value="Submit" />
         </form>
-        <div className={styles.result}>{result}</div>
       </main>
     </div>
   );
